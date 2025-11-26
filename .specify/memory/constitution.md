@@ -1,22 +1,24 @@
 <!--
 Sync Impact Report:
-Version: 0.0.0 → 1.0.0
-Change Type: MAJOR (Initial constitution ratification)
-Modified Principles: N/A (Initial version)
-Added Sections:
-  - Core Principles (6 principles: TDD, Clean Code, Robust Architecture, Enterprise Production Readiness, Observability & Monitoring, Security & Compliance)
-  - Data Pipeline Standards
-  - Change Data Capture Requirements
-  - Governance
+Version: 1.0.0 → 2.0.0
+Change Type: MAJOR (Technology stack change: Cassandra/PostgreSQL → MongoDB/Delta Lake)
+Modified Principles:
+  - I. Test-Driven Development: Updated contract test integrations from Cassandra/PostgreSQL to MongoDB/Delta Lake/Kafka/MinIO
+  - III. Robust Architecture: Updated Repository/Strategy/Factory patterns for MongoDB BSON and Delta Lake
+  - Data Pipeline Standards: Complete rewrite of Capture/Transform/Load for MongoDB change streams and Delta Lake
+  - Performance Optimization: Updated parallelism and caching for MongoDB/MinIO/Delta Lake
+Added Sections: N/A
 Removed Sections: N/A
 Templates Status:
-  ✅ plan-template.md - Reviewed, Constitution Check section will reference new principles
-  ✅ spec-template.md - Reviewed, aligns with new requirements
-  ✅ tasks-template.md - Reviewed, test-first approach supported
-Follow-up TODOs: None
+  ✅ plan-template.md - Aligned with MongoDB/Delta Lake architecture
+  ✅ spec-template.md - Aligned with new technology requirements
+  ✅ tasks-template.md - Test-first approach maintained
+Follow-up TODOs:
+  - Verify spec.md, plan.md, tasks.md align with updated constitution
+  - Update any Cassandra/PostgreSQL references in existing documentation
 -->
 
-# Cassandra CDC to PostgreSQL Pipeline Constitution
+# MongoDB CDC to Delta Lake Pipeline Constitution
 
 ## Core Principles
 
@@ -27,12 +29,12 @@ Follow-up TODOs: None
 - Every feature begins with failing tests (Red-Green-Refactor cycle strictly enforced)
 - Tests MUST be reviewed and approved by stakeholders before implementation begins
 - No production code may be written without corresponding tests
-- Contract tests required for all external integrations (Cassandra, PostgreSQL, message queues)
+- Contract tests required for all external integrations (MongoDB, Delta Lake, Kafka, MinIO)
 - Integration tests required for data pipeline flows and transformations
 - Unit tests required for business logic, validators, and transformation functions
 - Test coverage MUST meet minimum 80% threshold for all production code
 
-**Rationale**: TDD ensures correctness, prevents regressions, documents behavior, and enables confident refactoring in mission-critical CDC pipelines where data integrity is paramount.
+**Rationale**: TDD ensures correctness, prevents regressions, documents behavior, and enables confident refactoring in mission-critical CDC pipelines where data integrity and analytical accuracy are paramount.
 
 ### II. Clean Code & Maintainability
 
@@ -56,9 +58,9 @@ Follow-up TODOs: None
 **Architecture MUST follow proven design patterns and best practices.**
 
 Required Patterns:
-- **Repository Pattern**: Abstract data access for Cassandra and PostgreSQL
-- **Strategy Pattern**: Support multiple CDC strategies (polling, triggers, log-based)
-- **Factory Pattern**: Create appropriate handlers for different Cassandra data types
+- **Repository Pattern**: Abstract data access for MongoDB, Delta Lake, and reconciliation state storage
+- **Strategy Pattern**: Support multiple CDC strategies (change streams, oplog tailing) and reconciliation modes
+- **Factory Pattern**: Create appropriate handlers for different MongoDB BSON data types and Delta Lake conversions
 - **Observer Pattern**: Event-driven pipeline stages with pub/sub messaging
 - **Circuit Breaker**: Fault tolerance for external service calls
 - **Retry with Exponential Backoff**: Resilient error handling
@@ -168,26 +170,26 @@ Compliance:
 ### Change Data Capture Requirements
 
 **Capture**:
-- Support multiple Cassandra versions (3.11+, 4.0+)
-- Detect schema changes automatically
-- Handle tombstones and deletions correctly
-- Preserve Cassandra data types and TTLs
-- Support filtering by keyspace, table, and column
-- Checkpoint progress for resumability
+- Support MongoDB versions (3.6+ through 7.0+) with change streams
+- Detect schema changes automatically (MongoDB's flexible schema)
+- Handle document deletions and updates correctly
+- Preserve MongoDB BSON data types including ObjectId, Date, Binary, nested documents
+- Support filtering by database, collection, and field patterns
+- Checkpoint progress for resumability using Kafka Connect offsets
 
 **Transform**:
-- Type mapping: Cassandra → PostgreSQL type conversions
-- Schema translation: CQL → SQL DDL generation
-- Data normalization: Handle Cassandra collections (list, set, map)
-- Conflict resolution: Define strategies for concurrent updates
-- Data validation: Ensure referential integrity constraints
+- Type mapping: MongoDB BSON → Delta Lake/Parquet type conversions
+- Schema translation: MongoDB collections → Delta Lake table schemas with struct/array types
+- Data normalization: Handle MongoDB nested documents and arrays appropriately
+- Conflict resolution: Define strategies for concurrent updates and schema evolution
+- Data validation: Ensure data quality and handle schema variations
 
 **Load**:
-- Batch inserts with configurable batch size (default 1000)
-- Upsert operations: Insert or update based on primary key
-- Transaction boundaries: ACID guarantees for related records
-- Backpressure: Pause consumption when target overloaded
-- Error isolation: Failed records routed to DLQ without blocking pipeline
+- Batch writes with configurable batch size (default 1000 records)
+- Upsert operations: Merge into Delta Lake based on document _id
+- Transaction boundaries: Delta Lake ACID guarantees for batch writes
+- Backpressure: Pause Kafka consumption when MinIO storage overloaded
+- Error isolation: Failed records routed to Dead Letter Queue (DLQ) without blocking pipeline
 
 ### Performance Optimization
 
@@ -196,13 +198,13 @@ Compliance:
 - Adaptive batching: Adjust batch size based on throughput and latency metrics
 
 **Parallelism**:
-- Partitioned processing: Distribute work by Cassandra partition key
+- Partitioned processing: Distribute work by MongoDB document _id or shard key via Kafka partitions
 - Thread pools: Separate pools for I/O (unbounded) and CPU (bounded) tasks
-- Async I/O: Non-blocking database operations using async/await
+- Async I/O: Non-blocking operations using async/await for MongoDB, MinIO, and Delta Lake writes
 
 **Caching**:
-- Schema cache: Cache Cassandra and PostgreSQL schemas (TTL 5 minutes)
-- Connection pooling: Reuse database connections (min 5, max 50 per pool)
+- Schema cache: Cache MongoDB collection schemas and Delta Lake table schemas (TTL 5 minutes)
+- Connection pooling: Reuse MongoDB and MinIO connections (min 5, max 50 per pool)
 
 ## Governance
 
@@ -240,4 +242,4 @@ Compliance:
 - Why the complexity is necessary
 - Why simpler alternatives were rejected
 
-**Version**: 1.0.0 | **Ratified**: 2025-11-20 | **Last Amended**: 2025-11-20
+**Version**: 2.0.0 | **Ratified**: 2025-11-20 | **Last Amended**: 2025-11-26

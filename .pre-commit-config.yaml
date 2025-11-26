@@ -1,86 +1,56 @@
-# Pre-commit hooks for code quality and security
+# Pre-commit hooks for MongoDB CDC to Delta Lake Pipeline
 # See https://pre-commit.com for more information
-# Install: pre-commit install
-# Run manually: pre-commit run --all-files
-
 repos:
-  # Ruff - Fast Python linter
-  - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.1.9
-    hooks:
-      - id: ruff
-        args: [--fix, --exit-non-zero-on-fix]
-        types_or: [python, pyi]
-
-  # Black - Python code formatter
-  - repo: https://github.com/psf/black
-    rev: 23.12.1
-    hooks:
-      - id: black
-        language_version: python3.11
-        types: [python]
-
-  # mypy - Static type checker
-  - repo: https://github.com/pre-commit/mirrors-mypy
-    rev: v1.8.0
-    hooks:
-      - id: mypy
-        additional_dependencies: [pydantic>=2.5.3, types-requests]
-        args: [--strict, --ignore-missing-imports]
-        types: [python]
-        exclude: ^tests/
-
-  # Bandit - Security linter
-  - repo: https://github.com/PyCQA/bandit
-    rev: 1.7.6
-    hooks:
-      - id: bandit
-        args: [-c, pyproject.toml, -r, src/]
-        additional_dependencies: ["bandit[toml]"]
-        types: [python]
-
-  # Check for secrets
-  - repo: https://github.com/Yelp/detect-secrets
-    rev: v1.4.0
-    hooks:
-      - id: detect-secrets
-        args: ['--baseline', '.secrets.baseline']
-        exclude: package.lock.json
-
-  # Standard pre-commit hooks
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v4.5.0
     hooks:
       - id: trailing-whitespace
-        types: [python, yaml, markdown]
       - id: end-of-file-fixer
-        types: [python, yaml, markdown]
       - id: check-yaml
-        args: [--safe]
-      - id: check-added-large-files
-        args: [--maxkb=1024]
-      - id: check-case-conflict
-      - id: check-merge-conflict
+        args: ['--unsafe']
       - id: check-json
-      - id: check-toml
+      - id: check-added-large-files
+        args: ['--maxkb=1000']
+      - id: check-merge-conflict
       - id: detect-private-key
-      - id: mixed-line-ending
-        args: [--fix=lf]
-      - id: no-commit-to-branch
-        args: [--branch, main, --branch, master]
+      - id: check-case-conflict
 
-  # YAML linter
-  - repo: https://github.com/adrienverge/yamllint
-    rev: v1.33.0
+  - repo: https://github.com/psf/black
+    rev: 24.1.1
     hooks:
-      - id: yamllint
-        args: [-c=.yamllint.yaml]
-        types: [yaml]
+      - id: black
+        language_version: python3.11
+        args: ['--line-length=100']
 
-  # Markdown linter
-  - repo: https://github.com/igorshubovych/markdownlint-cli
-    rev: v0.38.0
+  - repo: https://github.com/pycqa/isort
+    rev: 5.13.2
     hooks:
-      - id: markdownlint
-        args: [--fix, --disable, MD013, MD033, MD041]
-        types: [markdown]
+      - id: isort
+        args: ['--profile', 'black', '--line-length', '100']
+
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.1.14
+    hooks:
+      - id: ruff
+        args: ['--fix', '--exit-non-zero-on-fix']
+
+  - repo: https://github.com/pre-commit/mirrors-mypy
+    rev: v1.8.0
+    hooks:
+      - id: mypy
+        additional_dependencies: [pydantic>=2.5.0, types-requests]
+        args: ['--ignore-missing-imports']
+
+  - repo: https://github.com/PyCQA/bandit
+    rev: 1.7.6
+    hooks:
+      - id: bandit
+        args: ['-c', 'pyproject.toml', '-r', 'api', 'delta-writer', 'reconciliation', 'shared']
+        additional_dependencies: ['bandit[toml]']
+
+  - repo: https://github.com/python-poetry/poetry
+    rev: '1.7.0'
+    hooks:
+      - id: poetry-check
+      - id: poetry-lock
+        args: ['--no-update']

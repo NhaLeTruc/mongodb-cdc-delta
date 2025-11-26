@@ -65,21 +65,36 @@ requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
 
 [tool.pytest.ini_options]
-testpaths = ["tests"]
+testpaths = ["tests", "api/tests", "delta-writer/tests", "reconciliation/tests"]
 python_files = ["test_*.py"]
 python_classes = ["Test*"]
 python_functions = ["test_*"]
 addopts = [
     "--verbose",
-    "--cov=src",
-    "--cov-report=term-missing",
+    "-ra",
+    "--strict-markers",
+    "--strict-config",
+    "--cov=api",
+    "--cov=delta-writer",
+    "--cov=reconciliation",
+    "--cov=shared",
+    "--cov-report=term-missing:skip-covered",
     "--cov-report=html",
-    "--cov-fail-under=20",
+    "--cov-report=xml",
+    "--cov-fail-under=80",
     "--timeout=300",
     "--timeout-method=thread"
 ]
 asyncio_mode = "auto"
 timeout = 300
+markers = [
+    "unit: Unit tests",
+    "integration: Integration tests",
+    "e2e: End-to-end tests",
+    "contract: Contract tests",
+    "slow: Slow tests",
+    "performance: Performance tests",
+]
 
 [tool.black]
 line-length = 100
@@ -158,13 +173,29 @@ disallow_untyped_defs = false
 disallow_untyped_calls = false
 
 [tool.coverage.run]
-source = ["src"]
-omit = ["tests/*", "**/__pycache__/*", "**/.venv/*"]
+source = ["api", "delta-writer", "reconciliation", "shared"]
+omit = [
+    "*/tests/*",
+    "*/test_*.py",
+    "*/__pycache__/*",
+    "*/migrations/*",
+    "**/.venv/*",
+]
 
 [tool.coverage.report]
 precision = 2
 show_missing = true
 skip_covered = false
+exclude_lines = [
+    "pragma: no cover",
+    "def __repr__",
+    "raise AssertionError",
+    "raise NotImplementedError",
+    "if __name__ == .__main__.:",
+    "if TYPE_CHECKING:",
+    "class .*\\bProtocol\\):",
+    "@(abc\\.)?abstractmethod",
+]
 
 [tool.bandit]
 # Bandit security linter configuration

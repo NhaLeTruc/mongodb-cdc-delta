@@ -1,0 +1,162 @@
+groups:
+  - name: cdc_pipeline_alerts
+    interval: 30s
+    rules:
+      # High Replication Lag Alert
+      - alert: HighReplicationLag
+        expr: kafka_consumer_lag{topic=~"mongodb.*"} > 300
+        for: 5m
+        labels:
+          severity: warning
+          component: cdc_pipeline
+        annotations:
+          summary: "High replication lag detected"
+          description: "Kafka consumer lag for {{ $labels.topic }} is {{ $value }} seconds (threshold: 300s)"
+          runbook_url: "https://docs.example.com/runbooks/high-replication-lag"
+
+      # Critical Replication Lag Alert
+      - alert: CriticalReplicationLag
+        expr: kafka_consumer_lag{topic=~"mongodb.*"} > 600
+        for: 2m
+        labels:
+          severity: critical
+          component: cdc_pipeline
+        annotations:
+          summary: "Critical replication lag detected"
+          description: "Kafka consumer lag for {{ $labels.topic }} is {{ $value }} seconds (threshold: 600s)"
+          runbook_url: "https://docs.example.com/runbooks/high-replication-lag"
+
+      # High Error Rate Alert
+      - alert: HighErrorRate
+        expr: rate(cdc_errors_total[5m]) > 10
+        for: 3m
+        labels:
+          severity: warning
+          component: cdc_pipeline
+        annotations:
+          summary: "High error rate in CDC pipeline"
+          description: "Error rate is {{ $value }} errors/second (threshold: 10/s)"
+          runbook_url: "https://docs.example.com/runbooks/high-error-rate"
+
+      # Service Down Alert
+      - alert: ServiceDown
+        expr: up{job=~"fastapi|delta-writer|reconciliation"} == 0
+        for: 1m
+        labels:
+          severity: critical
+          component: "{{ $labels.job }}"
+        annotations:
+          summary: "Service {{ $labels.job }} is down"
+          description: "Service {{ $labels.job }} has been down for more than 1 minute"
+          runbook_url: "https://docs.example.com/runbooks/service-down"
+
+      # Dead Letter Queue Growing
+      - alert: DLQGrowing
+        expr: increase(dlq_messages_total[10m]) > 100
+        for: 5m
+        labels:
+          severity: warning
+          component: cdc_pipeline
+        annotations:
+          summary: "Dead letter queue is growing"
+          description: "DLQ has received {{ $value }} messages in the last 10 minutes"
+          runbook_url: "https://docs.example.com/runbooks/dlq-growing"
+
+      # Low Throughput Alert
+      - alert: LowThroughput
+        expr: rate(cdc_events_processed_total[5m]) < 100
+        for: 10m
+        labels:
+          severity: warning
+          component: cdc_pipeline
+        annotations:
+          summary: "CDC pipeline throughput is low"
+          description: "Processing {{ $value }} events/second (expected: >100/s)"
+          runbook_url: "https://docs.example.com/runbooks/low-throughput"
+
+      # Reconciliation Failure Alert
+      - alert: ReconciliationFailed
+        expr: reconciliation_job_status{status="failed"} > 0
+        for: 1m
+        labels:
+          severity: warning
+          component: reconciliation
+        annotations:
+          summary: "Reconciliation job failed"
+          description: "Reconciliation job {{ $labels.job_id }} failed"
+          runbook_url: "https://docs.example.com/runbooks/reconciliation-failure"
+
+      # Data Discrepancy Alert
+      - alert: DataDiscrepancyDetected
+        expr: reconciliation_discrepancies_found > 1000
+        for: 1m
+        labels:
+          severity: critical
+          component: reconciliation
+        annotations:
+          summary: "High number of data discrepancies detected"
+          description: "Found {{ $value }} discrepancies in reconciliation job {{ $labels.job_id }}"
+          runbook_url: "https://docs.example.com/runbooks/data-discrepancy"
+
+      # MinIO Storage Space Low
+      - alert: MinIOStorageLow
+        expr: minio_cluster_capacity_usable_free_bytes / minio_cluster_capacity_usable_total_bytes < 0.1
+        for: 5m
+        labels:
+          severity: warning
+          component: storage
+        annotations:
+          summary: "MinIO storage space is running low"
+          description: "Less than 10% free space remaining in MinIO"
+          runbook_url: "https://docs.example.com/runbooks/storage-low"
+
+      # Kafka Consumer Lag Alert
+      - alert: KafkaConsumerLagHigh
+        expr: kafka_consumer_group_lag > 10000
+        for: 5m
+        labels:
+          severity: warning
+          component: kafka
+        annotations:
+          summary: "Kafka consumer lag is high"
+          description: "Consumer group {{ $labels.consumer_group }} has lag of {{ $value }} messages"
+          runbook_url: "https://docs.example.com/runbooks/kafka-lag"
+
+  - name: infrastructure_alerts
+    interval: 30s
+    rules:
+      # MongoDB Replica Set Not Healthy
+      - alert: MongoDBReplicaSetUnhealthy
+        expr: mongodb_rs_status != 1
+        for: 2m
+        labels:
+          severity: critical
+          component: mongodb
+        annotations:
+          summary: "MongoDB replica set is unhealthy"
+          description: "MongoDB replica set status is {{ $value }}"
+          runbook_url: "https://docs.example.com/runbooks/mongodb-unhealthy"
+
+      # Kafka Broker Down
+      - alert: KafkaBrokerDown
+        expr: up{job="kafka"} == 0
+        for: 1m
+        labels:
+          severity: critical
+          component: kafka
+        annotations:
+          summary: "Kafka broker is down"
+          description: "Kafka broker has been down for more than 1 minute"
+          runbook_url: "https://docs.example.com/runbooks/kafka-down"
+
+      # PostgreSQL Connection Pool Exhausted
+      - alert: PostgreSQLConnectionPoolExhausted
+        expr: pg_stat_database_numbackends / pg_settings_max_connections > 0.9
+        for: 2m
+        labels:
+          severity: warning
+          component: postgres
+        annotations:
+          summary: "PostgreSQL connection pool near exhaustion"
+          description: "PostgreSQL is using {{ $value | humanizePercentage }} of available connections"
+          runbook_url: "https://docs.example.com/runbooks/postgres-connections"

@@ -1,0 +1,62 @@
+[
+  {
+    "_id": "60d5ec49f1b2c8b1f8e4c1a1",
+    "name": "Alice Johnson",
+    "email": "alice.johnson@example.com",
+    "age": 28,
+    "address": {
+      "street": "123 Main St",
+      "city": "New York",
+      "state": "NY",
+      "zip": "10001",
+      "coordinates": {
+        "lat": 40.7128,
+        "lon": -74.0060
+      }
+    },
+    "tags": ["developer", "python", "kafka"],
+    "is_active": true,
+    "created_at": "2023-01-15T10:30:00Z",
+    "updated_at": "2023-01-15T10:30:00Z"
+  },
+  {
+    "_id": "60d5ec49f1b2c8b1f8e4c1a2",
+    "name": "Bob Smith",
+    "email": "bob.smith@example.com",
+    "age": 35,
+    "address": {
+      "street": "456 Oak Ave",
+      "city": "San Francisco",
+      "state": "CA",
+      "zip": "94102",
+      "coordinates": {
+        "lat": 37.7749,
+        "lon": -122.4194
+      }
+    },
+    "tags": ["manager", "agile"],
+    "is_active": true,
+    "created_at": "2023-02-20T14:45:00Z",
+    "updated_at": "2023-02-20T14:45:00Z"
+  },
+  {
+    "_id": "60d5ec49f1b2c8b1f8e4c1a3",
+    "name": "Charlie Davis",
+    "email": "charlie.davis@example.com",
+    "age": 42,
+    "address": {
+      "street": "789 Pine Rd",
+      "city": "Seattle",
+      "state": "WA",
+      "zip": "98101",
+      "coordinates": {
+        "lat": 47.6062,
+        "lon": -122.3321
+      }
+    },
+    "tags": ["architect", "cloud", "aws"],
+    "is_active": false,
+    "created_at": "2023-03-10T09:15:00Z",
+    "updated_at": "2023-03-10T09:15:00Z"
+  }
+]

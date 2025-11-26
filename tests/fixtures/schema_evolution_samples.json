@@ -1,0 +1,136 @@
+{
+  "nested_documents": [
+    {
+      "_id": "schema_test_001",
+      "user": {
+        "profile": {
+          "name": "John Doe",
+          "bio": {
+            "summary": "Software Engineer",
+            "skills": ["Python", "Go", "Rust"]
+          }
+        },
+        "settings": {
+          "theme": "dark",
+          "notifications": {
+            "email": true,
+            "sms": false,
+            "push": true
+          }
+        }
+      }
+    }
+  ],
+  "missing_fields": [
+    {
+      "_id": "missing_001",
+      "name": "Complete Record",
+      "email": "complete@example.com",
+      "age": 30,
+      "phone": "+1-555-1234"
+    },
+    {
+      "_id": "missing_002",
+      "name": "Missing Email",
+      "age": 25
+    },
+    {
+      "_id": "missing_003",
+      "name": "Missing Age and Phone",
+      "email": "partial@example.com"
+    }
+  ],
+  "type_variations": [
+    {
+      "_id": "type_001",
+      "value": 42,
+      "price": 19.99,
+      "description": "Integer and float values"
+    },
+    {
+      "_id": "type_002",
+      "value": "42",
+      "price": "19.99",
+      "description": "Same fields as strings"
+    },
+    {
+      "_id": "type_003",
+      "value": 42.5,
+      "price": 19,
+      "description": "Type variations"
+    }
+  ],
+  "array_variations": [
+    {
+      "_id": "array_001",
+      "tags": ["tag1", "tag2", "tag3"],
+      "items": [
+        {"id": 1, "name": "Item 1"},
+        {"id": 2, "name": "Item 2"}
+      ]
+    },
+    {
+      "_id": "array_002",
+      "tags": [],
+      "items": []
+    },
+    {
+      "_id": "array_003",
+      "tags": ["single-tag"],
+      "items": [{"id": 1, "name": "Only One"}]
+    }
+  ],
+  "null_and_undefined": [
+    {
+      "_id": "null_001",
+      "field1": null,
+      "field2": "has value",
+      "field3": 0
+    },
+    {
+      "_id": "null_002",
+      "field1": "has value",
+      "field2": null
+    }
+  ],
+  "schema_evolution_sequence": [
+    {
+      "_id": "evolution_001",
+      "version": 1,
+      "name": "Original Schema",
+      "email": "user@example.com"
+    },
+    {
+      "_id": "evolution_002",
+      "version": 2,
+      "name": "Added Phone",
+      "email": "user2@example.com",
+      "phone": "+1-555-0001"
+    },
+    {
+      "_id": "evolution_003",
+      "version": 3,
+      "name": "Added Nested Address",
+      "email": "user3@example.com",
+      "phone": "+1-555-0002",
+      "address": {
+        "street": "123 Main St",
+        "city": "New York",
+        "zip": "10001"
+      }
+    },
+    {
+      "_id": "evolution_004",
+      "version": 4,
+      "name": "Added Array Field",
+      "email": "user4@example.com",
+      "phone": "+1-555-0003",
+      "address": {
+        "street": "456 Oak Ave",
+        "city": "Boston",
+        "zip": "02101"
+      },
+      "roles": ["user", "admin"]
+    }
+  ]
+}

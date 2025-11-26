@@ -29,13 +29,13 @@ This is a multi-service architecture:
 
 **Purpose**: Project initialization and basic structure for all services
 
-- [ ] T001 Create root project structure with docker/, api/, delta-writer/, reconciliation/, shared/, tests/, config/, scripts/, docs/ directories
-- [ ] T002 Initialize Python monorepo with pyproject.toml at root for shared configuration (Black, Ruff, mypy)
-- [ ] T003 [P] Create .pre-commit-config.yaml with Black, Ruff, mypy, Bandit, isort hooks
-- [ ] T004 [P] Create .gitignore for Python, Docker, IDE files
-- [ ] T005 [P] Create Makefile with targets: build, test, lint, format, up, down, clean
-- [ ] T006 [P] Create README.md with project overview and quick start
-- [ ] T007 Create docker/.dockerignore file
+- [X] T001 Create root project structure with docker/, api/, delta-writer/, reconciliation/, shared/, tests/, config/, scripts/, docs/ directories
+- [X] T002 Initialize Python monorepo with pyproject.toml at root for shared configuration (Black, Ruff, mypy)
+- [X] T003 [P] Create .pre-commit-config.yaml with Black, Ruff, mypy, Bandit, isort hooks
+- [X] T004 [P] Create .gitignore for Python, Docker, IDE files
+- [X] T005 [P] Create Makefile with targets: build, test, lint, format, up, down, clean
+- [X] T006 [P] Create README.md with project overview and quick start
+- [X] T007 Create docker/.dockerignore file
 
 ---
 
@@ -47,38 +47,38 @@ This is a multi-service architecture:
 
 ### Docker Compose Infrastructure
 
-- [ ] T008 Create docker/compose/docker-compose.yml with MongoDB, Kafka, Zookeeper, Kafka Connect, MinIO, PostgreSQL services
-- [ ] T009 [P] Create docker/compose/docker-compose.test.yml for test environment with isolated networks
-- [ ] T010 [P] Create docker/monitoring/prometheus/prometheus.yml with scrape configs for all services
-- [ ] T011 [P] Create docker/monitoring/grafana/dashboards/ directory with CDC metrics dashboard JSON
-- [ ] T012 [P] Create docker/monitoring/jaeger/config.yml for distributed tracing
-- [ ] T013 [P] Create docker/kafka-connect/Dockerfile extending confluent-kafka-connect with Debezium connector
-- [ ] T014 Create config/kafka-connect/debezium-mongodb.json connector configuration template
-- [ ] T015 Create config/vault/policies/ directory with service-specific Vault policies
+- [X] T008 Create docker/compose/docker-compose.yml with MongoDB, Kafka, Zookeeper, Kafka Connect, MinIO, PostgreSQL services
+- [X] T009 [P] Create docker/compose/docker-compose.test.yml for test environment with isolated networks
+- [X] T010 [P] Create docker/monitoring/prometheus/prometheus.yml with scrape configs for all services
+- [X] T011 [P] Create docker/monitoring/grafana/dashboards/ directory with CDC metrics dashboard JSON
+- [X] T012 [P] Create docker/monitoring/jaeger/config.yml for distributed tracing
+- [X] T013 [P] Create docker/kafka-connect/Dockerfile extending confluent-kafka-connect with Debezium connector
+- [X] T014 Create config/kafka-connect/debezium-mongodb.json connector configuration template
+- [X] T015 Create config/vault/policies/ directory with service-specific Vault policies
 
 ### Shared Python Libraries
 
-- [ ] T016 Create shared/logging/structured_logger.py with structlog configuration
-- [ ] T017 [P] Create shared/tracing/otel_config.py for OpenTelemetry setup
-- [ ] T018 [P] Create shared/metrics/prometheus_metrics.py with common metric definitions
-- [ ] T019 [P] Create shared/security/vault_client.py for HashiCorp Vault integration
-- [ ] T020 [P] Create shared/security/crypto.py with encryption utilities
-- [ ] T021 [P] Create shared/models/common.py with shared Pydantic models (PipelineConfig base, etc.)
+- [X] T016 Create shared/logging/structured_logger.py with structlog configuration
+- [X] T017 [P] Create shared/tracing/otel_config.py for OpenTelemetry setup
+- [X] T018 [P] Create shared/metrics/prometheus_metrics.py with common metric definitions
+- [X] T019 [P] Create shared/security/vault_client.py for HashiCorp Vault integration
+- [X] T020 [P] Create shared/security/crypto.py with encryption utilities
+- [X] T021 [P] Create shared/models/common.py with shared Pydantic models (PipelineConfig base, etc.)
 
 ### Testing Infrastructure
 
-- [ ] T022 Create tests/testcontainers/containers.py with reusable MongoDB, Kafka, MinIO container configurations
-- [ ] T023 [P] Create tests/fixtures/sample_documents.json with test MongoDB documents
-- [ ] T023a [P] Create tests/fixtures/schema_evolution_samples.json with nested docs, missing fields, type variations for FR-007-FR-011 testing
-- [ ] T024 [P] Create tests/load/data_generators/mongodb_seeder.py using Faker and Mimesis
-- [ ] T025 [P] Create tests/load/data_generators/change_generator.py for simulating CDC events
-- [ ] T026 Create pytest.ini at root with test configuration and markers
+- [X] T022 Create tests/testcontainers/containers.py with reusable MongoDB, Kafka, MinIO container configurations
+- [X] T023 [P] Create tests/fixtures/sample_documents.json with test MongoDB documents
+- [X] T023a [P] Create tests/fixtures/schema_evolution_samples.json with nested docs, missing fields, type variations for FR-007-FR-011 testing
+- [X] T024 [P] Create tests/load/data_generators/mongodb_seeder.py using Faker and Mimesis
+- [X] T025 [P] Create tests/load/data_generators/change_generator.py for simulating CDC events
+- [X] T026 Create pytest.ini at root with test configuration and markers
 
 ### Scripts
 
-- [ ] T027 Create scripts/setup-local.sh to initialize local environment (Vault unsealing, MinIO buckets, etc.)
-- [ ] T028 [P] Create scripts/seed-mongodb.sh to populate test data
-- [ ] T029 [P] Create scripts/create-pipeline.sh to create CDC pipeline via API
+- [X] T027 Create scripts/setup-local.sh to initialize local environment (Vault unsealing, MinIO buckets, etc.)
+- [X] T028 [P] Create scripts/seed-mongodb.sh to populate test data
+- [X] T029 [P] Create scripts/create-pipeline.sh to create CDC pipeline via API
 
 **Checkpoint**: Foundation ready - user story implementation can now begin in parallel
 

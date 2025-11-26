@@ -94,34 +94,34 @@ This is a multi-service architecture:
 
 > **NOTE: Write these tests FIRST, ensure they FAIL before implementation**
 
-- [ ] T030 [P] [US1] Contract test for Debezium change event schema in tests/contract/test_debezium_events.py
-- [ ] T031 [P] [US1] Contract test for Delta Lake table schema in tests/contract/test_delta_schema.py
-- [ ] T032 [P] [US1] Unit test for BSON to Delta type conversion in tests/unit/test_bson_to_delta.py
-- [ ] T033 [P] [US1] Unit test for Delta Lake write operations in tests/unit/test_delta_writer.py
-- [ ] T034 [US1] Integration test for MongoDB insert → Delta Lake in tests/integration/test_cdc_insert.py using Testcontainers
-- [ ] T035 [US1] Integration test for MongoDB update → Delta Lake in tests/integration/test_cdc_update.py
-- [ ] T036 [US1] Integration test for MongoDB delete → Delta Lake in tests/integration/test_cdc_delete.py
-- [ ] T037 [US1] E2E test for full CDC flow in tests/e2e/test_cdc_flow.py
+- [X] T030 [P] [US1] Contract test for Debezium change event schema in tests/contract/test_debezium_events.py
+- [X] T031 [P] [US1] Contract test for Delta Lake table schema in tests/contract/test_delta_schema.py
+- [X] T032 [P] [US1] Unit test for BSON to Delta type conversion in tests/unit/test_bson_to_delta.py
+- [X] T033 [P] [US1] Unit test for Delta Lake write operations in tests/unit/test_delta_writer.py
+- [ ] T034 [US1] Integration test for MongoDB insert → Delta Lake in tests/integration/test_cdc_insert.py using Testcontainers (SKELETON - TODO)
+- [ ] T035 [US1] Integration test for MongoDB update → Delta Lake in tests/integration/test_cdc_update.py (SKELETON - TODO)
+- [ ] T036 [US1] Integration test for MongoDB delete → Delta Lake in tests/integration/test_cdc_delete.py (SKELETON - TODO)
+- [ ] T037 [US1] E2E test for full CDC flow in tests/e2e/test_cdc_flow.py (SKELETON - TODO)
 
 ### Implementation for User Story 1
 
 #### Delta Lake Writer Service
 
-- [ ] T038 Create delta-writer/requirements.txt with deltalake, kafka-python, aioboto3, structlog
-- [ ] T039 Create delta-writer/pyproject.toml for service-specific configuration
-- [ ] T040 [P] [US1] Create delta-writer/src/config.py with Pydantic Settings for Kafka, MinIO, Delta Lake config
-- [ ] T041 [P] [US1] Create delta-writer/src/transformers/bson_to_delta.py for MongoDB BSON → Arrow type mapping
-- [ ] T042 [P] [US1] Create delta-writer/src/transformers/schema_inferrer.py to infer Delta schema from MongoDB documents
-- [ ] T043 [P] [US1] Create delta-writer/src/storage/minio_client.py wrapping aioboto3 for S3-compatible operations
-- [ ] T044 [US1] Create delta-writer/src/writer/schema_manager.py for Delta Lake schema operations and caching (depends on T042)
-- [ ] T045 [US1] Create delta-writer/src/writer/delta_writer.py for Delta Lake write operations (depends on T041, T043, T044)
-- [ ] T046 [US1] Create delta-writer/src/writer/batch_processor.py for batching Kafka records before write
-- [ ] T047 [US1] Create delta-writer/src/consumer/event_handler.py to process Debezium change events
-- [ ] T048 [US1] Create delta-writer/src/consumer/event_consumer.py main Kafka consumer loop with exactly-once semantics (depends on T045, T047)
-- [ ] T048a [US1] Tune Kafka consumer batch size and MinIO multipart upload in delta-writer/src/config.py based on load testing to achieve 10K events/sec
-- [ ] T049 [US1] Create delta-writer/src/main.py application entry point
-- [ ] T050 [P] [US1] Create delta-writer/Dockerfile for containerized deployment
-- [ ] T051 [P] [US1] Add delta-writer service to docker/compose/docker-compose.yml
+- [X] T038 Create delta-writer/requirements.txt with deltalake, kafka-python, aioboto3, structlog
+- [X] T039 Create delta-writer/pyproject.toml for service-specific configuration
+- [X] T040 [P] [US1] Create delta-writer/src/config.py with Pydantic Settings for Kafka, MinIO, Delta Lake config (COMPLETE with full implementation)
+- [ ] T041 [P] [US1] Create delta-writer/src/transformers/bson_to_delta.py for MongoDB BSON → Arrow type mapping (SKELETON - See IMPLEMENTATION_GUIDE.md)
+- [ ] T042 [P] [US1] Create delta-writer/src/transformers/schema_inferrer.py to infer Delta schema from MongoDB documents (SKELETON - See IMPLEMENTATION_GUIDE.md)
+- [ ] T043 [P] [US1] Create delta-writer/src/storage/minio_client.py wrapping aioboto3 for S3-compatible operations (SKELETON - See IMPLEMENTATION_GUIDE.md)
+- [ ] T044 [US1] Create delta-writer/src/writer/schema_manager.py for Delta Lake schema operations and caching (SKELETON - See IMPLEMENTATION_GUIDE.md)
+- [ ] T045 [US1] Create delta-writer/src/writer/delta_writer.py for Delta Lake write operations (SKELETON - See IMPLEMENTATION_GUIDE.md)
+- [ ] T046 [US1] Create delta-writer/src/writer/batch_processor.py for batching Kafka records before write (SKELETON - See IMPLEMENTATION_GUIDE.md)
+- [ ] T047 [US1] Create delta-writer/src/consumer/event_handler.py to process Debezium change events (SKELETON - See IMPLEMENTATION_GUIDE.md)
+- [ ] T048 [US1] Create delta-writer/src/consumer/event_consumer.py main Kafka consumer loop with exactly-once semantics (SKELETON - See IMPLEMENTATION_GUIDE.md)
+- [ ] T048a [US1] Tune Kafka consumer batch size and MinIO multipart upload in delta-writer/src/config.py based on load testing to achieve 10K events/sec (CONFIG READY - tune after load testing)
+- [ ] T049 [US1] Create delta-writer/src/main.py application entry point (SKELETON - See IMPLEMENTATION_GUIDE.md)
+- [ ] T050 [P] [US1] Create delta-writer/Dockerfile for containerized deployment (TODO)
+- [ ] T051 [P] [US1] Add delta-writer service to docker/compose/docker-compose.yml (TODO)
 
 #### Kafka Connect & Debezium Configuration
 

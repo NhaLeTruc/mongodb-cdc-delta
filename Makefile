@@ -1,10 +1,14 @@
-.PHONY: help install test lint clean start stop
+.PHONY: help install test lint clean start stop up down test-local teardown seed health
 
 # Ensure poetry is in PATH
 export PATH := $(HOME)/.local/bin:$(PATH)
 
 # Default target
 .DEFAULT_GOAL := help
+
+# Colors for output
+GREEN := \033[0;32m
+NC := \033[0m # No Color
 
 help: ## Show this help message
 	@echo 'Usage: make [target]'
@@ -102,3 +106,74 @@ pre-commit: ## Run pre-commit hooks manually
 	poetry run pre-commit run --all-files
 
 all: clean install install-hooks lint test ## Run all checks and tests
+
+# ============================================
+# Phase 6: Local Development and Testing
+# ============================================
+
+up: ## Start all services with health checks
+	@echo "$(GREEN)Starting all services...$(NC)"
+	@cd docker/compose && docker compose up -d
+	@echo "$(GREEN)Waiting for services to be healthy...$(NC)"
+	@./scripts/setup-local.sh || true
+
+down: ## Stop all services and remove volumes
+	@echo "$(GREEN)Stopping all services...$(NC)"
+	@cd docker/compose && docker compose down -v --remove-orphans
+
+test-local: ## Run full test suite with local Docker environment
+	@echo "$(GREEN)Running full test suite with local Docker environment...$(NC)"
+	@echo "Checking Docker services..."
+	@cd docker/compose && docker compose ps
+	@echo "\n$(GREEN)Running unit tests...$(NC)"
+	poetry run pytest tests/unit -v --tb=short
+	@echo "\n$(GREEN)Running integration tests...$(NC)"
+	poetry run pytest tests/integration -v --tb=short
+	@echo "\n$(GREEN)Running E2E tests...$(NC)"
+	poetry run pytest tests/e2e -v --tb=short
+	@echo "\n$(GREEN)All tests completed!$(NC)"
+
+test-quick: ## Run fast tests only (unit tests)
+	@echo "$(GREEN)Running quick tests (unit tests only)...$(NC)"
+	poetry run pytest tests/unit -v
+
+test-e2e: ## Run E2E tests only
+	@echo "$(GREEN)Running E2E tests...$(NC)"
+	poetry run pytest tests/e2e -v
+
+teardown: ## Clean shutdown and cleanup
+	@echo "$(GREEN)Running teardown...$(NC)"
+	@./scripts/teardown.sh
+
+seed: ## Seed MongoDB with test data
+	@echo "$(GREEN)Seeding MongoDB with test data...$(NC)"
+	@./scripts/seed-mongodb.sh
+
+health: ## Check health of all services
+	@echo "$(GREEN)Checking service health...$(NC)"
+	@echo "MongoDB:"
+	@docker exec cdc-mongodb mongosh --quiet --eval "db.adminCommand({ ping: 1 })" 2>/dev/null && echo "  ✓ Healthy" || echo "  ✗ Unhealthy"
+	@echo "Kafka:"
+	@docker exec cdc-kafka kafka-broker-api-versions --bootstrap-server localhost:9092 2>/dev/null && echo "  ✓ Healthy" || echo "  ✗ Unhealthy"
+	@echo "MinIO:"
+	@curl -sf http://localhost:9000/minio/health/live >/dev/null && echo "  ✓ Healthy" || echo "  ✗ Unhealthy"
+	@echo "PostgreSQL:"
+	@docker exec cdc-postgres pg_isready -U postgres 2>/dev/null && echo "  ✓ Healthy" || echo "  ✗ Unhealthy"
+	@echo "Kafka Connect:"
+	@curl -sf http://localhost:8083/connectors >/dev/null && echo "  ✓ Healthy" || echo "  ✗ Unhealthy"
+	@echo "Prometheus:"
+	@curl -sf http://localhost:9090/-/healthy >/dev/null && echo "  ✓ Healthy" || echo "  ✗ Unhealthy"
+	@echo "Grafana:"
+	@curl -sf http://localhost:3000/api/health >/dev/null && echo "  ✓ Healthy" || echo "  ✗ Unhealthy"
+
+watch-logs: ## Watch logs from all services
+	@cd docker/compose && docker compose logs -f
+
+watch-delta-writer: ## Watch Delta Writer logs
+	@cd docker/compose && docker compose logs -f delta-writer
+
+create-pipeline: ## Create a CDC pipeline (requires COLLECTION parameter)
+	@./scripts/create-pipeline.sh $(COLLECTION)
+
+deploy-connector: ## Deploy Debezium connector
+	@./scripts/deploy-connector.sh

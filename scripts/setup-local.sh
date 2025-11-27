@@ -30,7 +30,7 @@ print_error() {
 wait_for_service() {
     local service_name=$1
     local check_command=$2
-    local max_attempts=30
+    local max_attempts=${3:-30}
     local attempt=0
 
     print_info "Waiting for $service_name to be ready..."
@@ -41,10 +41,38 @@ wait_for_service() {
             return 0
         fi
         attempt=$((attempt + 1))
+        echo -n "."
         sleep 2
     done
 
-    print_error "$service_name failed to become ready after $max_attempts attempts"
+    echo
+    print_error "$service_name failed to become ready after $((max_attempts * 2)) seconds"
+    return 1
+}
+
+# Function to check Docker Compose health status
+wait_for_healthy() {
+    local service_name=$1
+    local max_attempts=${2:-60}
+    local attempt=0
+
+    print_info "Waiting for $service_name health check..."
+
+    while [ $attempt -lt $max_attempts ]; do
+        health_status=$(docker compose ps --format json | jq -r ".[] | select(.Service == \"$service_name\") | .Health" 2>/dev/null)
+
+        if [ "$health_status" == "healthy" ]; then
+            print_info "$service_name is healthy!"
+            return 0
+        fi
+
+        attempt=$((attempt + 1))
+        echo -n "."
+        sleep 2
+    done
+
+    echo
+    print_error "$service_name did not become healthy after $((max_attempts * 2)) seconds"
     return 1
 }
 
@@ -65,29 +93,36 @@ docker compose up -d
 
 echo
 
-# Wait for MongoDB
-wait_for_service "MongoDB" "docker exec mongodb mongosh --quiet --eval 'db.adminCommand({ ping: 1 })'"
+# Wait for core services using Docker health checks
+wait_for_healthy "mongodb" 60
+wait_for_healthy "zookeeper" 30
+wait_for_healthy "kafka" 60
+wait_for_healthy "minio" 30
+wait_for_healthy "postgres" 30
 
-# Wait for Kafka
-wait_for_service "Kafka" "docker exec kafka kafka-broker-api-versions --bootstrap-server localhost:9092"
+# Wait for dependent services
+wait_for_healthy "kafka-connect" 90
+wait_for_healthy "prometheus" 30
+wait_for_healthy "grafana" 30
 
-# Wait for MinIO
-wait_for_service "MinIO" "curl -sf http://localhost:9000/minio/health/live"
+# Verify Jaeger if present
+if docker compose ps | grep -q jaeger; then
+    wait_for_service "Jaeger" "curl -sf http://localhost:14269/" 30
+fi
 
-# Wait for PostgreSQL
-wait_for_service "PostgreSQL" "docker exec postgres pg_isready -U cdc_admin"
-
-# Wait for Kafka Connect
-wait_for_service "Kafka Connect" "curl -sf http://localhost:8083/"
-
-# Wait for Vault
-wait_for_service "Vault" "curl -sf http://localhost:8200/v1/sys/health"
-
-# Wait for Prometheus
-wait_for_service "Prometheus" "curl -sf http://localhost:9090/-/healthy"
-
-# Wait for Grafana
-wait_for_service "Grafana" "curl -sf http://localhost:3000/api/health"
+# Initialize MongoDB replica set if needed
+print_info "Verifying MongoDB replica set..."
+docker exec cdc-mongodb mongosh --quiet --eval "
+try {
+    rs.status();
+    print('Replica set already initialized');
+} catch(e) {
+    rs.initiate({
+        _id: 'rs0',
+        members: [{_id: 0, host: 'mongodb:27017'}]
+    });
+    print('Replica set initialized');
+}" || print_warn "MongoDB replica set check failed"
 
 echo
 print_info "All services are ready!"

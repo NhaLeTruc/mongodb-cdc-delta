@@ -1,46 +1,42 @@
 """Schema management for Delta Lake tables with caching and evolution."""
 
-from typing import Optional, Dict
+from typing import Optional, Dict, Callable, Any
 from datetime import datetime, timedelta
 import pyarrow as pa
 from deltalake import DeltaTable
 import structlog
 
 from ..transformers.schema_inferrer import SchemaInferrer
+from .schema_cache import SchemaCache
 
 logger = structlog.get_logger(__name__)
 
 
-class SchemaCache:
-    """TTL-based cache for Delta table schemas."""
+class SchemaEvolutionMetrics:
+    """Metrics for schema evolution operations."""
 
-    def __init__(self, ttl_seconds: int = 300):
-        """Initialize cache with TTL (default: 5 minutes)."""
-        self._cache: Dict[str, tuple[pa.Schema, datetime]] = {}
-        self._ttl = timedelta(seconds=ttl_seconds)
+    def __init__(self):
+        """Initialize metrics."""
+        self.fields_added = 0
+        self.types_widened = 0
+        self.schema_versions_created = 0
+        self.schema_evolutions = 0
 
-    def get(self, table_uri: str) -> Optional[pa.Schema]:
-        """Get cached schema if not expired."""
-        if table_uri in self._cache:
-            schema, cached_at = self._cache[table_uri]
-            if datetime.now() - cached_at < self._ttl:
-                logger.debug("schema_cache_hit", table_uri=table_uri)
-                return schema
-            else:
-                logger.debug("schema_cache_expired", table_uri=table_uri)
-                del self._cache[table_uri]
-        return None
+    def reset(self):
+        """Reset all metrics."""
+        self.fields_added = 0
+        self.types_widened = 0
+        self.schema_versions_created = 0
+        self.schema_evolutions = 0
 
-    def set(self, table_uri: str, schema: pa.Schema) -> None:
-        """Cache schema with current timestamp."""
-        self._cache[table_uri] = (schema, datetime.now())
-        logger.debug("schema_cached", table_uri=table_uri, fields=len(schema))
-
-    def invalidate(self, table_uri: str) -> None:
-        """Invalidate cached schema."""
-        if table_uri in self._cache:
-            del self._cache[table_uri]
-            logger.debug("schema_cache_invalidated", table_uri=table_uri)
+    def to_dict(self) -> Dict[str, int]:
+        """Convert to dictionary."""
+        return {
+            "fields_added": self.fields_added,
+            "types_widened": self.types_widened,
+            "schema_versions_created": self.schema_versions_created,
+            "schema_evolutions": self.schema_evolutions
+        }
 
 
 class SchemaManager:
@@ -56,6 +52,9 @@ class SchemaManager:
         """
         self.storage_options = storage_options
         self.cache = SchemaCache(ttl_seconds=cache_ttl)
+        self.metrics = SchemaEvolutionMetrics()
+        self.schema_change_callbacks: list[Callable[[str, pa.Schema, pa.Schema], None]] = []
+        self.schema_versions: Dict[str, int] = {}
 
     def get_table_schema(self, table_uri: str, use_cache: bool = True) -> Optional[pa.Schema]:
         """
@@ -108,19 +107,112 @@ class SchemaManager:
 
         if existing_schema is None:
             logger.info("new_table_schema_created", table_uri=table_uri)
+            self.schema_versions[table_uri] = 1
+            self.metrics.schema_versions_created += 1
             return new_schema
 
         merged_schema = SchemaInferrer.merge_schemas(existing_schema, new_schema)
 
         if existing_schema != merged_schema:
+            # Schema evolved
+            diff = SchemaInferrer.get_schema_diff(existing_schema, merged_schema)
+
+            # Update metrics
+            self.metrics.schema_evolutions += 1
+            if diff.get("added_fields"):
+                self.metrics.fields_added += len(diff["added_fields"])
+            if diff.get("changed_fields"):
+                self.metrics.types_widened += len(diff["changed_fields"])
+
+            # Increment version
+            current_version = self.schema_versions.get(table_uri, 1)
+            new_version = current_version + 1
+            self.schema_versions[table_uri] = new_version
+
+            # Enhanced logging with schema diff
             logger.info(
                 "schema_evolved",
                 table_uri=table_uri,
-                diff=SchemaInferrer.get_schema_diff(existing_schema, merged_schema)
+                version=new_version,
+                diff=diff,
+                fields_added=len(diff.get("added_fields", {})),
+                fields_removed=len(diff.get("removed_fields", {})),
+                fields_changed=len(diff.get("changed_fields", {}))
             )
+
+            # Trigger callbacks
+            self._notify_schema_change(table_uri, existing_schema, merged_schema)
+
             self.cache.invalidate(table_uri)
 
         return merged_schema
+
+    def register_schema_change_callback(
+        self,
+        callback: Callable[[str, pa.Schema, pa.Schema], None]
+    ):
+        """
+        Register a callback to be notified of schema changes.
+
+        Args:
+            callback: Function to call on schema change.
+                      Signature: (table_uri, old_schema, new_schema) -> None
+        """
+        self.schema_change_callbacks.append(callback)
+        logger.info(
+            "schema_change_callback_registered",
+            callbacks_count=len(self.schema_change_callbacks)
+        )
+
+    def _notify_schema_change(
+        self,
+        table_uri: str,
+        old_schema: pa.Schema,
+        new_schema: pa.Schema
+    ):
+        """
+        Notify all registered callbacks of a schema change.
+
+        Args:
+            table_uri: Table URI
+            old_schema: Previous schema
+            new_schema: New schema
+        """
+        for callback in self.schema_change_callbacks:
+            try:
+                callback(table_uri, old_schema, new_schema)
+            except Exception as e:
+                logger.error(
+                    "schema_change_callback_failed",
+                    table_uri=table_uri,
+                    error=str(e)
+                )
+
+    def get_schema_version(self, table_uri: str) -> int:
+        """
+        Get the current schema version for a table.
+
+        Args:
+            table_uri: Delta table URI
+
+        Returns:
+            Current schema version (1 if unknown)
+        """
+        return self.schema_versions.get(table_uri, 1)
+
+    def get_metrics(self) -> Dict[str, int]:
+        """
+        Get schema evolution metrics.
+
+        Returns:
+            Dictionary with metric counters
+        """
+        return self.metrics.to_dict()
+
+    def reset_metrics(self):
+        """Reset schema evolution metrics."""
+        self.metrics.reset()
+        logger.info("schema_manager_metrics_reset")
 
     def create_table_if_not_exists(
         self,

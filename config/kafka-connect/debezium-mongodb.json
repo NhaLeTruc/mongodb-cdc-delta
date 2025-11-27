@@ -5,44 +5,28 @@
     "mongodb.connection.string": "mongodb://admin:admin123@mongodb:27017/?replicaSet=rs0",
     "mongodb.connection.mode": "replica_set",
     "topic.prefix": "mongodb",
-    "collection.include.list": "testdb.users,testdb.orders",
-
-    "_comment_snapshot": "Snapshot configuration",
+    "collection.include.list": ".*",
     "snapshot.mode": "initial",
     "snapshot.fetch.size": 10000,
     "snapshot.max.threads": 4,
-
-    "_comment_polling": "Polling and batching configuration",
     "poll.interval.ms": 100,
     "max.batch.size": 2048,
     "max.queue.size": 16384,
     "tasks.max": 1,
-
-    "_comment_change_capture": "Change capture configuration",
     "tombstones.on.delete": true,
     "capture.mode": "change_streams_update_full",
-
-    "_comment_heartbeat": "Heartbeat configuration",
     "heartbeat.interval.ms": 5000,
     "heartbeat.topics.prefix": "__debezium-heartbeat",
-
-    "_comment_schema": "Schema configuration",
     "schema.name.adjustment.mode": "avro",
     "provide.transaction.metadata": true,
-
-    "_comment_exactly_once": "Exactly-once semantics",
-    "transaction.metadata.factory": "io.debezium.pipeline.txmetadata.DefaultTransactionMetadataFactory",
-
-    "_comment_transforms": "Transformations",
+    "key.converter": "org.apache.kafka.connect.json.JsonConverter",
+    "key.converter.schemas.enable": false,
+    "value.converter": "org.apache.kafka.connect.json.JsonConverter",
+    "value.converter.schemas.enable": false,
     "transforms": "unwrap",
     "transforms.unwrap.type": "io.debezium.connector.mongodb.transforms.ExtractNewDocumentState",
     "transforms.unwrap.drop.tombstones": false,
     "transforms.unwrap.delete.handling.mode": "rewrite",
-    "transforms.unwrap.add.fields": "op,source.ts_ms,source.db,source.collection",
-
-    "_comment_error_handling": "Error handling",
-    "errors.tolerance": "none",
-    "errors.log.enable": true,
-    "errors.log.include.messages": true
+    "transforms.unwrap.add.fields": "op,source.ts_ms,source.db,source.collection"
   }
 }

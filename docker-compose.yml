@@ -294,6 +294,48 @@ services:
     networks:
       - cdc-network
 
+  # Delta Writer (Kafka consumer -> Delta Lake writer)
+  delta-writer:
+    build:
+      context: .
+      dockerfile: delta-writer/Dockerfile
+    container_name: delta-writer
+    depends_on:
+      kafka:
+        condition: service_healthy
+      minio:
+        condition: service_healthy
+      minio-init:
+        condition: service_completed_successfully
+    environment:
+      # Kafka configuration
+      KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+      KAFKA_CONSUMER_GROUP: delta-writer
+      KAFKA_TOPIC_PATTERN: mongodb.*
+      KAFKA_AUTO_OFFSET_RESET: earliest
+      KAFKA_MAX_POLL_RECORDS: 2000
+      KAFKA_SESSION_TIMEOUT_MS: 30000
+      # MinIO configuration
+      MINIO_ENDPOINT: http://minio:9000
+      MINIO_ACCESS_KEY: minioadmin
+      MINIO_SECRET_KEY: minioadmin123
+      MINIO_BUCKET: lakehouse
+      MINIO_REGION: us-east-1
+      MINIO_SECURE: "false"
+      # Delta Lake configuration
+      DELTA_TABLE_BASE_PATH: s3://lakehouse/tables
+      DELTA_SCHEMA_CACHE_TTL: 300
+      DELTA_BATCH_SIZE: 1000
+      DELTA_BATCH_TIMEOUT_MS: 5000
+      # Service configuration
+      LOG_LEVEL: INFO
+      METRICS_PORT: 8001
+    ports:
+      - "8001:8001"
+    restart: unless-stopped
+    networks:
+      - cdc-network
+
 volumes:
   mongodb_data:
   zookeeper_data:

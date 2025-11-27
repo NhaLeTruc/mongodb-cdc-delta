@@ -1,4 +1,4 @@
-"""Delta Lake write operations with schema evolution."""
+"""Delta Lake write operations with schema evolution and retry logic."""
 
 from typing import List, Dict, Any, Optional
 from datetime import datetime
@@ -9,6 +9,7 @@ import structlog
 from .schema_manager import SchemaManager
 from ..transformers.bson_to_delta import BSONToDeltaConverter
 from ..transformers.schema_inferrer import SchemaInferrer
+from ..utils.error_handler import retry_with_backoff, RetryConfig, CircuitBreaker
 
 logger = structlog.get_logger(__name__)
 
@@ -20,7 +21,8 @@ class DeltaWriter:
         self,
         storage_options: Dict[str, str],
         partition_by: Optional[List[str]] = None,
-        schema_cache_ttl: int = 300
+        schema_cache_ttl: int = 300,
+        enable_circuit_breaker: bool = True
     ):
         """
         Initialize Delta writer.
@@ -29,10 +31,26 @@ class DeltaWriter:
             storage_options: S3 storage options for MinIO/Delta Lake
             partition_by: Default partition columns (e.g., ["_ingestion_date"])
             schema_cache_ttl: Schema cache TTL in seconds
+            enable_circuit_breaker: Enable circuit breaker for MinIO operations
         """
         self.storage_options = storage_options
         self.partition_by = partition_by or ["_ingestion_date"]
         self.schema_manager = SchemaManager(storage_options, schema_cache_ttl)
+
+        # Circuit breaker for MinIO operations (T080 - error handling)
+        self.minio_circuit_breaker = CircuitBreaker(
+            failure_threshold=5,
+            timeout_seconds=60
+        ) if enable_circuit_breaker else None
+
+        # Retry configuration for MinIO operations (T080)
+        self.retry_config = RetryConfig(
+            max_attempts=3,
+            initial_delay=0.5,
+            max_delay=30.0,
+            exponential_base=2.0,
+            jitter=True
+        )
 
     def write_batch(
         self,

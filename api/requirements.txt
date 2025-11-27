@@ -1,0 +1,81 @@
+# FastAPI and ASGI server
+fastapi[all]==0.109.2
+uvicorn[standard]==0.27.1
+gunicorn==21.2.0
+
+# Database drivers
+asyncpg==0.29.0
+psycopg2-binary==2.9.9
+
+# Authentication and security
+python-jose[cryptography]==3.3.0
+passlib[bcrypt]==1.7.4
+python-multipart==0.0.9
+cryptography==42.0.2
+
+# Data validation and serialization
+pydantic==2.5.3
+pydantic-settings==2.1.0
+email-validator==2.1.0
+
+# Kafka client
+confluent-kafka==2.3.0
+
+# HashiCorp Vault integration
+hvac==2.1.0
+
+# Logging and monitoring
+structlog==24.1.0
+python-json-logger==2.0.7
+
+# Metrics and tracing
+prometheus-client==0.19.0
+opentelemetry-api==1.22.0
+opentelemetry-sdk==1.22.0
+opentelemetry-instrumentation==0.43b0
+opentelemetry-instrumentation-fastapi==0.43b0
+opentelemetry-exporter-jaeger==1.22.0
+opentelemetry-exporter-prometheus==0.43b0
+
+# Rate limiting
+slowapi==0.1.9
+
+# HTTP client
+httpx==0.26.0
+
+# Error handling and retry
+tenacity==8.2.3
+
+# Time handling
+python-dateutil==2.8.2
+pytz==2024.1
+
+# Data processing
+orjson==3.9.13
+
+# Caching
+aiocache==0.12.2
+redis==5.0.1
+
+# CORS
+python-cors==1.0.0
+
+# Environment configuration
+python-dotenv==1.0.1
+
+# Scheduling
+apscheduler==3.10.4
+
+# Testing utilities (optional for API service)
+faker==22.6.0
+
+# Async utilities
+asyncio==3.4.3
+aiofiles==23.2.1
+
+# Schema validation
+jsonschema==4.21.1
+
+# SQL query builder
+sqlalchemy==2.0.25
+alembic==1.13.1

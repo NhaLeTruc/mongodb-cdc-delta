@@ -157,7 +157,8 @@ class AuthService:
                 "username": username,
                 "roles": roles,
                 "exp": int(expire.timestamp()),
-                "iat": int(now.timestamp())
+                "iat": int(now.timestamp()),
+                "type": "access"
             }
 
             token = jwt.encode(
@@ -177,6 +178,53 @@ class AuthService:
 
         except Exception as e:
             logger.error("token_create_failed", error=str(e), user_id=str(user_id))
+            raise
+
+    def create_refresh_token(
+        self,
+        user_id: UUID,
+        expires_delta: Optional[timedelta] = None
+    ) -> str:
+        """
+        Create JWT refresh token.
+
+        Args:
+            user_id: User ID
+            expires_delta: Custom expiration time (optional)
+
+        Returns:
+            JWT refresh token string
+        """
+        try:
+            if expires_delta is None:
+                expires_delta = timedelta(days=self.settings.jwt_refresh_token_expire_days)
+
+            now = datetime.utcnow()
+            expire = now + expires_delta
+
+            payload = {
+                "sub": str(user_id),
+                "exp": int(expire.timestamp()),
+                "iat": int(now.timestamp()),
+                "type": "refresh"
+            }
+
+            token = jwt.encode(
+                payload,
+                self.settings.jwt_secret_key,
+                algorithm=self.settings.jwt_algorithm
+            )
+
+            logger.info(
+                "refresh_token_created",
+                user_id=str(user_id),
+                expires_in=expires_delta.total_seconds()
+            )
+
+            return token
+
+        except Exception as e:
+            logger.error("refresh_token_create_failed", error=str(e), user_id=str(user_id))
             raise
 
     def decode_token(self, token: str) -> Optional[TokenPayload]:
@@ -213,6 +261,28 @@ class AuthService:
         except Exception as e:
             logger.error("token_decode_error", error=str(e))
             return None
+
+    def verify_token(self, token: str) -> Optional[dict]:
+        """
+        Verify and decode JWT token (alias for decode_token).
+
+        Args:
+            token: JWT token string
+
+        Returns:
+            Token payload as dict or None if invalid
+        """
+        token_payload = self.decode_token(token)
+        if not token_payload:
+            return None
+
+        return {
+            "sub": token_payload.sub,
+            "username": token_payload.username,
+            "roles": token_payload.roles,
+            "exp": token_payload.exp,
+            "iat": token_payload.iat
+        }
 
     async def authenticate_user(self, login_request: LoginRequest) -> Optional[UserDB]:
         """
